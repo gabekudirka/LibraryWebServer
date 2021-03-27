@@ -86,8 +86,21 @@ namespace LibraryWebServer.Controllers
         [HttpPost]
         public ActionResult AllTitles()
         {
+            // will need to do a left join because name and serial can be null
+            using (Team64LibraryContext db = new Team64LibraryContext())
+            {
+                var query = from t in db.Titles
+                            join i in db.Inventory on t.Isbn equals i.Isbn
+                            join c in db.CheckedOut on i.Serial equals c.Serial
+                            join p in db.Patrons on c.CardNum equals p.CardNum
+                            select new
+                            {
+                                name = p.Name,
+                                cardnum = p.CardNum
+                            };
 
-            // TODO: Implement
+
+            }
 
             return Json(null);
 
