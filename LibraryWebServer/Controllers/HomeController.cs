@@ -121,8 +121,20 @@ namespace LibraryWebServer.Controllers
         [HttpPost]
         public ActionResult ListMyBooks()
         {
-            // TODO: Implement
-            return Json(null);
+            // Query the database to get the books you have checked out
+            using (Team64LibraryContext db = new Team64LibraryContext())
+            {
+                var query = from c in db.CheckedOut where c.CardNum == card
+                            join i in db.Inventory on c.Serial equals i.Serial
+                            select new
+                            {
+                                 title = i.IsbnNavigation.Title,
+                                 author = i.IsbnNavigation.Author,
+                                 serial = i.Serial
+                            };
+
+                return Json(query.ToArray());
+            }
         }
 
 
