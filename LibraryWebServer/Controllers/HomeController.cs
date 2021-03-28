@@ -86,23 +86,27 @@ namespace LibraryWebServer.Controllers
         [HttpPost]
         public ActionResult AllTitles()
         {
-            // will need to do a left join because name and serial can be null
+            // Query the database using left joins to get all of the titles
             using (Team64LibraryContext db = new Team64LibraryContext())
             {
                 var query = from t in db.Titles
-                            join i in db.Inventory on t.Isbn equals i.Isbn
-                            join c in db.CheckedOut on i.Serial equals c.Serial
-                            join p in db.Patrons on c.CardNum equals p.CardNum
+                            join i in db.Inventory on t.Isbn equals i.Isbn into inv
+                            from join1 in inv.DefaultIfEmpty()
+                            join c in db.CheckedOut on join1.Serial equals c.Serial into chkOut
+                            from join2 in chkOut.DefaultIfEmpty()
+                            join p in db.Patrons on join2.CardNum equals p.CardNum into patrons
+                            from join3 in patrons.DefaultIfEmpty()
                             select new
                             {
-                                name = p.Name,
-                                cardnum = p.CardNum
+                                isbn = t.Isbn,
+                                title = t.Title,
+                                author = t.Author,
+                                serial = join1 == null ? null :  (uint?)join1.Serial,
+                                name = join3 == null ? "" : join3.Name
                             };
 
-
+                return Json(query.ToArray());
             }
-
-            return Json(null);
 
         }
 
